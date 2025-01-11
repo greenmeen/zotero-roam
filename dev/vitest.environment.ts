@@ -1,3 +1,4 @@
+import structuredClone from "@ungap/structured-clone";
 import type { Environment } from 'vitest';
 import { builtinEnvironments } from 'vitest/environments';
 

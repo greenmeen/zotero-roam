@@ -70,6 +70,7 @@
         "@testing-library/react-hooks": "^8.0.1",
         "@typescript-eslint/eslint-plugin": "^7.10.0",
         "@typescript-eslint/parser": "^7.10.0",
+        "@ungap/structured-clone": "^1.2.1",
         "@vitejs/plugin-react-swc": "^3.6.0",
         "@vitest/coverage-istanbul": "^1.6.0",
         "auto-changelog": "^2.4.0",
