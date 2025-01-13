@@ -10,13 +10,18 @@ jobs:
   commit-checks:
     name: Lint, test, and build
     runs-on: ubuntu-latest
+    env:
+      RUN_STORYBOOK: ${{ !contains(github.ref, 'renovate/') || contains(github.ref, 'renovate/storybook') }}
 
     steps:
+      - name: Dump job env
+        run: echo env
+
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
@@ -35,7 +40,7 @@ jobs:
 
       - name: Upload test reports
         uses: dorny/test-reporter@v1
-        if: success() || failure()
+        if: ${{ fromJSON(env.RUN_STORYBOOK) && (success() || failure()) }}
         with:
           name: Tests
           path: reports/tests-junit.xml
@@ -43,10 +48,10 @@ jobs:
 
       - name: Vite build (prod)
         run: npm run build:prod
-      
+
       - name: Vite build (Roam Depot)
         run: npm run build:roam
-      
+
       - name: Vite build (sandbox)
         run: npm run build:sandbox
 
@@ -58,8 +63,8 @@ jobs:
 
       - name: Storybook CI
         id: chromatic
-        uses: chromaui/action@v1
-        if: ${{ !startsWith(github.ref_name, 'renovate/') }}
+        uses: chromaui/action@v11
+        if: fromJSON(env.RUN_STORYBOOK)
         with:
           buildScriptName: "build-storybook"
           exitOnceUploaded: true
@@ -68,7 +73,7 @@ jobs:
           exitZeroOnChanges: true
 
       - name: Storybook tests
-        if: ${{ !startsWith(github.ref_name, 'renovate/') }}
+        if: fromJSON(env.RUN_STORYBOOK)
         run: npm run ci:test-storybook
         env:
           TARGET_URL: "${{ steps.chromatic.outputs.storybookUrl }}"
@@ -77,14 +82,16 @@ jobs:
 
       - name: Upload test reports
         uses: dorny/test-reporter@v1
-        if: ${{ !startsWith(github.ref_name, 'renovate/') }}
+        if: fromJSON(env.RUN_STORYBOOK)
         with:
           name: Storybook
           path: reports/storybook-junit.xml
           reporter: jest-junit
 
+
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
+        if: fromJSON(env.RUN_STORYBOOK)
         with:
           directory: ./coverage/
           verbose: true

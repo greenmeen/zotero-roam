@@ -1,9 +1,11 @@
 /* istanbul ignore file */
+import { emitCustomEvent } from "@services/events";
+import { triggerSmartblock } from "@services/smartblocks";
+
 import { executeFunctionByName } from "../../utils";
-import { _formatNotes, _getItemMetadata } from "../../api";
-import { emitCustomEvent } from "../events";
+import { formatNotes, formatItemMetadata } from "../../api/helpers";
+
 import { Roam } from "./types";
-import { use_smartblock_metadata } from "../smartblocks";
 
 import { RCitekeyPages, RCitekeyPagesWithEditTime, RCursorLocation, RImportableBlock, RImportableElement, ZItemAnnotation, ZItemAttachment, ZItemNote, ZItemTop } from "Types/transforms";
 import { ArgsMetadataBlocks, OutcomeMetadataStatus, SettingsAnnotations, SettingsMetadata, SettingsNotes, SettingsTypemap } from "Types/extension";
@@ -322,7 +324,10 @@ async function importItemMetadata(
 	{ item, pdfs = [], notes = [] }: { item: ZItemTop, pdfs?: ZItemAttachment[], notes?: (ZItemNote | ZItemAnnotation)[] },
 	/** The UID of the item's Roam page (if it exists), otherwise `false` */
 	uid: string | false,
-	metadataSettings: SettingsMetadata, typemap: SettingsTypemap, notesSettings: SettingsNotes, annotationsSettings: SettingsAnnotations
+	metadataSettings: SettingsMetadata,
+	typemap: SettingsTypemap,
+	notesSettings: SettingsNotes,
+	annotationsSettings: SettingsAnnotations
 ) {
 	const title = "@" + item.key;
 	const pageUID = uid || window.roamAlphaAPI.util.generateUID();
@@ -335,68 +340,38 @@ async function importItemMetadata(
 	
 	const { use = "default", func = "", smartblock: { param, paramValue } } = metadataSettings;
 
-	if(use == "smartblock"){
-		const context = { item, notes, page, pdfs };
-		try {
-			const outcome = await use_smartblock_metadata({ param, paramValue }, context);
-			emitCustomEvent({ ...outcome, _type: "metadata-added" });
+	try {
+		let event;
 
-			return outcome;
-
-		} catch(e) {
-			window.zoteroRoam?.error?.({
-				origin: "Metadata",
-				message: "Failed to import metadata via SmartBlock for: " + title,
-				detail: e.message,
-				context: {
-					page,
-					settings: {
-						annotations: annotationsSettings,
-						metadata: metadataSettings,
-						notes: notesSettings
-					}
-				},
-				showToaster: 1000
-			});
-			return await Promise.reject(e);
+		if (use == "smartblock") {
+			const importOutcome = await triggerSmartblock(page.uid, { param, paramValue }, { item, notes, page, pdfs });
+			event = { page, ...importOutcome };
+		} else {
+			const blocks = (use == "function" && func)
+				? await executeFunctionByName(func, window, item, pdfs, notes)
+				: formatItemMetadata(item, pdfs, notes, { annotationsSettings, notesSettings, typemap });
+			const importOutcome = await addBlocksArray(pageUID, blocks);
+			event = { page, raw: { item, pdfs, notes }, ...importOutcome };
 		}
-	} else {
-		try {
-			const metadata = (use == "function" && func) 
-				? await executeFunctionByName(func, window, item, pdfs, notes) 
-				: _getItemMetadata(item, pdfs, notes, { annotationsSettings, notesSettings, typemap });
-			const importOutcome = await addBlocksArray(pageUID, metadata);
 
-			const outcome = {
+		emitCustomEvent({ ...event, _type: "metadata-added" })			
+		return event;
+	} catch (e) {
+		window.zoteroRoam?.error?.({
+			origin: "Metadata",
+			message: "Failed to import metadata for: " + title,
+			detail: e.message,
+			context: {
 				page,
-				raw: {
-					item,
-					pdfs,
-					notes
-				},
-				...importOutcome
-			};
-			emitCustomEvent({ ...outcome, _type: "metadata-added" });
-			
-			return outcome;
-
-		} catch(e) {
-			window.zoteroRoam?.error?.({
-				origin: "Metadata",
-				message: "Failed to import metadata for: " + title,
-				detail: e.message,
-				context: {
-					page,
-					settings: {
-						annotations: annotationsSettings,
-						metadata: metadataSettings,
-						notes: notesSettings
-					}
-				},
-				showToaster: 1000
-			});
-			return await Promise.reject(e);
-		}
+				settings: {
+					annotations: annotationsSettings,
+					metadata: metadataSettings,
+					notes: notesSettings
+				}
+			},
+			showToaster: 1000
+		});
+		return await Promise.reject(e);
 	}
 }
 
@@ -422,7 +397,7 @@ async function importItemNotes(
 	}
 
 	try {
-		const formattedOutput = _formatNotes(notes, pageUID, { annotationsSettings, notesSettings });
+		const formattedOutput = formatNotes(notes, pageUID, { annotationsSettings, notesSettings });
 		const importOutcome = await addBlocksArray(pageUID, formattedOutput);
 
 		const outcome = {
