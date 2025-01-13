@@ -24,6 +24,7 @@
 		"checkJs": true,
 		"isolatedModules": true,
 		"noEmit": true,
+		"noUnusedLocals": true,
 		"resolveJsonModule": true,
 		"types": ["vitest/globals"]
     },

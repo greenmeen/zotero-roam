@@ -98,7 +98,8 @@ export default defineConfig(({ command, mode }) => {
 		plugins: [react(), ...extraPlugins],
 		test: {
 			alias: {
-				"\.(css|sass)$": resolve("mocks", "style.ts")
+				"\.(css|sass)$": resolve("mocks", "style.ts"),
+				structuredClone: "core-js/actual/structuredClone",
 			},
 			clearMocks: true,
 			coverage: {
@@ -110,7 +111,7 @@ export default defineConfig(({ command, mode }) => {
 			define: {
 				"PACKAGE_VERSION": pkg.version
 			},
-			environment: "./dev/vitest.environment.ts",
+			environment: "jsdom",
 			globals: true,
 			outputFile: {
 				"junit": "reports/tests-junit.xml",

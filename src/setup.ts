@@ -1,7 +1,7 @@
 import { unmountComponentAtNode } from "react-dom";
 import { parseKeyCombo } from "@blueprintjs/core";
 import { Query, defaultShouldDehydrateQuery } from "@tanstack/react-query";
-import { PersistedClient } from "@tanstack/react-query-persist-client";
+import { PersistedClient, Persister } from "@tanstack/react-query-persist-client";
 
 import { setDefaultHooks } from "@services/events";
 import IDBDatabase from "@services/idb";
@@ -121,7 +121,7 @@ export function analyzeUserRequests(requests: LegacyUserDataRequest|(LegacyUserD
 }
 
 /** Creates a persister that can be used for writing a React Query client to the IndexedDB cache. */
-export function createPersisterWithIDB(database: IDBDatabase){
+export function createPersisterWithIDB(database: IDBDatabase): Persister{
 	const indexedDbKey = IDB_REACT_QUERY_CLIENT_KEY;
 
 	return {
