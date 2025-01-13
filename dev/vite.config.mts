@@ -98,7 +98,8 @@ export default defineConfig(({ command, mode }) => {
 		plugins: [react(), ...extraPlugins],
 		test: {
 			alias: {
-				"\.(css|sass)$": resolve("mocks", "style.ts")
+				"\.(css|sass)$": resolve("mocks", "style.ts"),
+				structuredClone: "core-js/actual/structuredClone",
 			},
 			clearMocks: true,
 			coverage: {

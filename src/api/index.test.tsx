@@ -201,12 +201,11 @@ describe("Database connectivity", () => {
 			settings: initSettings
 		});
 
-		vi.useFakeTimers()
+		vi.useFakeTimers({ toFake: ['Date'] })
 			.setSystemTime(date);
 	});
 
 	afterEach(async () => {
-		/* eslint-disable-next-line dot-notation */
 		await waitFor(() => indexedDB.deleteDatabase(idbInstance["dbName"]), { timeout: 5000 });
 		vi.useRealTimers();
 	});
@@ -325,7 +324,6 @@ describe("Error logging when the database no longer exists", () => {
 			settings: initSettings
 		});
 
-		/* eslint-disable-next-line dot-notation */
 		await waitFor(async () => {
 			await idbInstance.close();
 			await extension.deleteDatabase();
