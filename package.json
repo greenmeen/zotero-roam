@@ -88,7 +88,7 @@
         "fake-indexeddb": "^6.0.0",
         "globals": "^15.11.0",
         "msw": "^2.7.0",
-        "msw-storybook-addon": "^2.0.3",
+        "msw-storybook-addon": "^2.0.4",
         "release-it": "^18.0.0",
         "sass": "^1.79.4",
         "storybook": "^8.4.7",
