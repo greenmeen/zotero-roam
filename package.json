@@ -74,7 +74,7 @@
         "@typescript-eslint/eslint-plugin": "^8.19.1",
         "@typescript-eslint/parser": "^8.19.1",
         "@vitejs/plugin-react-swc": "^3.7.2",
-        "@vitest/coverage-istanbul": "^2.1.8",
+        "@vitest/coverage-istanbul": "^3.0.5",
         "@vitest/eslint-plugin": "^1.1.25",
         "auto-changelog": "^2.5.0",
         "axe-playwright": "^2.0.3",
